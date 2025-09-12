@@ -1,0 +1,140 @@
+/* Keep these at the top */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* A solid dark base for the page */
+body {
+    background-color: #1F1E1E;
+}
+
+/* This is the container for our two blurred circles */
+.aurora-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    overflow: hidden; /* This is important to contain the blur effect */
+}
+
+.aurora-bg::before, .aurora-bg::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%; /* Makes them circles */
+    
+    /* This is your "Layer Blur" of 150px */
+    filter: blur(150px);
+}
+
+/* This is your "2nd circle on left" */
+.aurora-bg::before {
+    width: 800px;  /* <-- CHANGE THIS from 600px */
+    height: 800px; /* <-- AND THIS from 600px */
+    top: 10%;
+    left: 10%;
+    background: radial-gradient(circle, rgba(193, 207, 251, 0.45), transparent 70%);
+}
+
+/* This is your "1st circle on right" */
+.aurora-bg::after {
+    width: 800px;  /* <-- CHANGE THIS from 600px */
+    height: 800px; /* <-- AND THIS from 600px */
+    bottom: 10%;
+    right: 10%;
+    background: radial-gradient(circle, rgba(122, 139, 250, 0.45), transparent 70%);
+}
+.animated-gradient-text {
+    background-size: 200% auto;
+    animation: gradient-flow 8s ease infinite;
+}
+@keyframes gradient-flow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+.parallax-container {
+    transition: transform 0.3s ease-out;
+}
+
+/* We'll add the SVG animations here too for later */
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 1; }
+}
+.svg-pulse {
+    animation: pulse 4s infinite ease-in-out;
+}
+
+@keyframes dash {
+    to { stroke-dashoffset: 0; }
+}
+.svg-draw {
+    stroke-dasharray: 1000;
+    stroke-dashoffset: 1000;
+    animation: dash 5s ease-out forwards infinite;
+}
+
+.glass-card {
+    background: rgba(42, 41, 41, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px); /* For Safari */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Timeline Styles */
+.timeline-line {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 3px;
+    height: 100%;
+    background: linear-gradient(to bottom, transparent, #C1CFFB, transparent);
+}
+
+.timeline-icon-container {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background-color: #2A2929;
+    border: 2px solid #C1CFFB;
+    box-shadow: 0 0 25px rgba(193, 207, 251, 0.4);
+}
+
+/* Scroll Animation Styles */
+.animate-on-scroll {
+    opacity: 0;
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+    transform: translateY(50px);
+}
+/* When visible, the container fades and slides in */
+.animate-on-scroll.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* This is the keyframe for the children's cascade animation */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Initially hide all children that will be staggered */
+.stagger-child {
+    opacity: 0;
+}
+
+/* When the parent container is visible, trigger the cascade animation on its children */
+.is-visible .stagger-child {
+    animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* We add delays to each child to create the cascade effect */
+.is-visible .delay-1 { animation-delay: 0.2s; }
+.is-visible .delay-2 { animation-delay: 0.3s; }
+.is-visible .delay-3 { animation-delay: 0.4s; }
