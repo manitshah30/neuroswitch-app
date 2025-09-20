@@ -1,0 +1,61 @@
+.starry-background {
+  background-color: #161623; /* Base dark color */
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Updated keyframes to animate background-position for a seamless loop */
+@keyframes animateStars {
+  from { background-position: 0 0; }
+  to   { background-position: 0 -10000px; } /* Animate over a large distance */
+}
+
+/* Base styles for star layers */
+.stars-layer-1, .stars-layer-2, .stars-layer-3 {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: auto; /* Allow the background to tile infinitely */
+  display: block;
+}
+
+/* Layer 1: Smallest, fastest stars */
+.stars-layer-1 {
+  background: 
+    radial-gradient(1px 1px at 20px 30px, #eee, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 40px 70px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 50px 160px, #ddd, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 90px 40px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 130px 80px, #fff, rgba(0,0,0,0)),
+    radial-gradient(1px 1px at 160px 120px, #ddd, rgba(0,0,0,0));
+  background-size: 200px 200px;
+  animation: animateStars 120s linear infinite;
+}
+
+/* Layer 2: Medium-sized, slower stars */
+.stars-layer-2 {
+  background: 
+    radial-gradient(2px 2px at 10px 90px, #eee, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 30px 170px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 80px 100px, #ddd, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 110px 20px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 140px 110px, #fff, rgba(0,0,0,0)),
+    radial-gradient(2px 2px at 190px 140px, #ddd, rgba(0,0,0,0));
+  background-size: 300px 300px;
+  animation: animateStars 180s linear infinite;
+}
+
+/* Layer 3: Largest, slowest stars */
+.stars-layer-3 {
+  background: 
+    radial-gradient(3px 3px at 50px 50px, #eee, rgba(0,0,0,0)),
+    radial-gradient(3px 3px at 100px 150px, #fff, rgba(0,0,0,0)),
+    radial-gradient(3px 3px at 150px 100px, #ddd, rgba(0,0,0,0));
+  background-size: 400px 400px;
+  animation: animateStars 240s linear infinite;
+}

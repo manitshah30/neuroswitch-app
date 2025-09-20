@@ -138,3 +138,95 @@ body {
 .is-visible .delay-1 { animation-delay: 0.2s; }
 .is-visible .delay-2 { animation-delay: 0.3s; }
 .is-visible .delay-3 { animation-delay: 0.4s; }
+
+/* Class to hide the scrollbar */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* ... your other global styles ... */
+
+@keyframes breathing-glow {
+  0%, 100% {
+    box-shadow: 0 0 30px rgba(167, 139, 250, 0.3); /* A78BFA with opacity */
+    border-color: rgba(193, 207, 251, 0.7); /* C1CFFB with opacity */
+  }
+  50% {
+    box-shadow: 0 0 45px rgba(167, 139, 250, 0.5);
+    border-color: rgba(167, 139, 250, 1);
+  }
+}
+
+.breathing-glow {
+  animation: breathing-glow 4s infinite ease-in-out;
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Base border style */
+}
+/* ... your existing styles ... */
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.flip-card {
+  transform-style: preserve-3d;
+  position: relative;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.flipped .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front,
+.flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  /* ADD THESE LINES TO CENTER CONTENT */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+/* --- THIS IS THE FIX --- */
+.flip-card-back {
+  /* This line "un-flips" the content on the back face */
+  transform: rotateY(180deg);
+}
+
+
+/* Add these new keyframes for quiz feedback */
+@keyframes shake-wrong {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  50% { transform: translateX(5px); }
+  75% { transform: translateX(-5px); }
+}
+
+@keyframes pulse-correct {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.7); }
+  50% { transform: scale(1.02); box-shadow: 0 0 20px 10px rgba(22, 163, 74, 0); }
+}
+
+.animate-shake-wrong {
+  animation: shake-wrong 0.4s ease-in-out;
+}
+
+.animate-pulse-correct {
+  animation: pulse-correct 0.6s ease-in-out;
+}
