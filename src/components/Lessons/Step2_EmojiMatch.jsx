@@ -7,10 +7,9 @@ function Step2_EmojiMatch({ data, onAnswer }) {
   const [selected, setSelected] = useState(null);
   const [startTime, setStartTime] = useState(Date.now());
 
-  // Reset timer when the question changes
+  // Reset timer and selection when the question changes
   useEffect(() => {
     setStartTime(Date.now());
-    // Also reset selection when navigating between questions
     setSelected(null);
   }, [currentIndex]);
 
@@ -26,13 +25,12 @@ function Step2_EmojiMatch({ data, onAnswer }) {
 
   // Handle selecting an answer
   const handleSelectOption = (option) => {
-    if (selected) return; // Prevent changing answer
+    if (selected) return;
 
     const reactionTime = (Date.now() - startTime) / 1000;
     const isCorrect = option === currentQuestion.correctAnswer;
     setSelected(option);
 
-    // Report performance data back to the parent LessonPage
     if (onAnswer) {
       onAnswer({
         type: 'emojiMatch',
@@ -54,39 +52,36 @@ function Step2_EmojiMatch({ data, onAnswer }) {
     }
   };
 
-  // Determine button styling based on selection and correctness
+  // Determine button styling (remains mostly the same, adjusted padding/text below)
   const getButtonClass = (option) => {
-    const baseStyle = `p-4 rounded-lg border-2 font-semibold text-xl text-white transition-all duration-300 w-full shadow-md hover:shadow-lg`;
-    
+    // Base styles adjusted for responsiveness
+    const baseStyle = `p-3 sm:p-4 rounded-lg border-2 font-semibold text-base sm:text-lg md:text-xl text-white transition-all duration-300 w-full shadow-md hover:shadow-lg text-center`;
+
     if (selected === null) {
-      // Unselected state - Subtle gradient, hover effect
       return `${baseStyle} bg-gradient-to-br from-slate-700 to-slate-800 border-slate-600 hover:from-slate-600 hover:to-slate-700 hover:scale-[1.03] transform`;
     }
-    
-    // Selected state - Show correct/incorrect
     const isCorrectAnswer = option === currentQuestion.correctAnswer;
     const isSelectedAnswer = option === selected;
-
     if (isCorrectAnswer) {
-      // Correct answer is always green after selection
       return `${baseStyle} bg-gradient-to-br from-green-600 to-emerald-700 border-green-500 scale-[1.05] shadow-green-500/30`;
     }
     if (isSelectedAnswer) {
-      // Incorrectly selected answer is red
       return `${baseStyle} bg-gradient-to-br from-red-600 to-rose-700 border-red-500`;
     }
-    // Other options are dimmed after selection
     return `${baseStyle} bg-slate-800 border-slate-700 opacity-40 cursor-not-allowed`;
   };
 
   return (
-    <div className="w-full max-w-2xl flex flex-col items-center p-4"> {/* Increased max-width */}
-      {/* Question Area - Enhanced styling */}
-      <div className="text-8xl mb-6 drop-shadow-lg">{currentQuestion.emoji}</div>
-      <p className="text-2xl text-gray-200 mb-8 text-center font-medium">{currentQuestion.question}</p>
-      
-      {/* Answer Options Grid */}
-      <div className="grid grid-cols-2 gap-5 w-full mb-8"> {/* Increased gap */}
+    // Added padding for smaller screens
+    <div className="w-full max-w-xs sm:max-w-xl md:max-w-2xl flex flex-col items-center px-2 sm:px-4">
+      {/* --- RESPONSIVE Question Area --- */}
+      {/* Adjusted emoji size, text size, margins */}
+      <div className="text-6xl sm:text-7xl md:text-8xl mb-4 sm:mb-6 drop-shadow-lg">{currentQuestion.emoji}</div>
+      <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-6 sm:mb-8 text-center font-medium">{currentQuestion.question}</p>
+
+      {/* --- RESPONSIVE Answer Options Grid --- */}
+      {/* Use grid-cols-1 on small screens, grid-cols-2 on sm+ */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 w-full mb-6 sm:mb-8">
         {currentQuestion.options.map((option) => (
           <button
             key={option}
@@ -99,23 +94,24 @@ function Step2_EmojiMatch({ data, onAnswer }) {
         ))}
       </div>
 
-      {/* Navigation - Matching Flip Card style */}
-      <div className="flex items-center justify-between w-full max-w-md mt-6">
+      {/* --- RESPONSIVE Navigation --- */}
+      {/* Matches Flip Card style, adjusts width/padding */}
+      <div className="flex items-center justify-between w-full max-w-xs sm:max-w-md mt-4 sm:mt-6">
          <button
             onClick={handlePrevQuestion}
-            className="p-4 px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-xl 
-                       hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 
+            className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-lg sm:text-xl
+                       hover:from-purple-600 hover:to-indigo-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === 0}
             aria-label="Previous question"
         >
             <FaArrowLeft />
         </button>
-        <span className="font-bold text-xl text-gray-300 tracking-wide">{currentIndex + 1} / {data.length}</span>
+        <span className="font-semibold text-lg sm:text-xl text-gray-300 tracking-wide">{currentIndex + 1} / {data.length}</span>
         <button
             onClick={handleNextQuestion}
-            className="p-4 px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-xl 
-                       hover:from-indigo-600 hover:to-blue-600 transition-all duration-200 
+            className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-lg sm:text-xl
+                       hover:from-indigo-600 hover:to-blue-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === data.length - 1}
             aria-label="Next question"

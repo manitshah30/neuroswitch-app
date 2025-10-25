@@ -26,7 +26,7 @@ function Step3_MultipleChoice({ data, onAnswer }) {
     console.error("Invalid current question index:", currentIndex);
     return <div className="text-red-400">Error: Could not load question.</div>;
   }
-  
+
   // Handler to calculate performance and report back
   const handleSelectOption = (option) => {
     if (selected) return; // Prevent changing the answer
@@ -59,13 +59,14 @@ function Step3_MultipleChoice({ data, onAnswer }) {
 
   // Determine button styling based on selection and correctness (matching EmojiMatch)
   const getButtonClass = (option) => {
-    const baseStyle = `p-4 rounded-lg border-2 font-semibold text-xl text-white transition-all duration-300 w-full shadow-md hover:shadow-lg`;
-    
+    // Base styles adjusted for responsiveness
+    const baseStyle = `p-3 sm:p-4 rounded-lg border-2 font-semibold text-base sm:text-lg md:text-xl text-white transition-all duration-300 w-full shadow-md hover:shadow-lg text-center`; // Adjusted padding/text
+
     if (selected === null) {
       // Unselected state
       return `${baseStyle} bg-gradient-to-br from-slate-700 to-slate-800 border-slate-600 hover:from-slate-600 hover:to-slate-700 hover:scale-[1.03] transform`;
     }
-    
+
     // Selected state
     const isCorrectAnswer = option === currentQuestion.correctAnswer;
     const isSelectedAnswer = option === selected;
@@ -80,13 +81,16 @@ function Step3_MultipleChoice({ data, onAnswer }) {
   };
 
   return (
-    // Increased max-width like EmojiMatch
-    <div className="w-full max-w-2xl flex flex-col items-center p-4"> 
-      {/* Enhanced question styling */}
-      <p className="text-2xl text-gray-200 mb-8 text-center font-medium">{currentQuestion.question}</p>
-      
-      {/* Answer Options Grid - Increased gap */}
-      <div className="grid grid-cols-2 gap-5 w-full mb-8"> 
+    // Added padding for smaller screens, responsive max-width
+    <div className="w-full max-w-xs sm:max-w-xl md:max-w-2xl flex flex-col items-center px-2 sm:px-4">
+      {/* --- RESPONSIVE Question Styling --- */}
+      {/* Adjusted text size, margins */}
+      <p className="text-lg sm:text-xl md:text-2xl text-gray-200 mb-6 sm:mb-8 text-center font-medium">{currentQuestion.question}</p>
+
+      {/* --- RESPONSIVE Answer Options Grid --- */}
+       {/* Use grid-cols-1 on small screens, grid-cols-2 on sm+ */}
+      {/* Adjusted gap */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5 w-full mb-6 sm:mb-8">
         {currentQuestion.options.map((option) => (
           <button
             key={option}
@@ -99,12 +103,13 @@ function Step3_MultipleChoice({ data, onAnswer }) {
         ))}
       </div>
 
-      {/* Navigation - Matching Flip Card and EmojiMatch style */}
-      <div className="flex items-center justify-between w-full max-w-md mt-6">
+      {/* --- RESPONSIVE Navigation --- */}
+      {/* Matches other steps, adjusts width/padding */}
+      <div className="flex items-center justify-between w-full max-w-xs sm:max-w-md mt-4 sm:mt-6">
          <button
             onClick={handlePrevQuestion}
-            className="p-4 px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-xl 
-                       hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 
+            className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-lg sm:text-xl
+                       hover:from-purple-600 hover:to-indigo-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === 0}
             aria-label="Previous question"
@@ -112,11 +117,11 @@ function Step3_MultipleChoice({ data, onAnswer }) {
             <FaArrowLeft />
         </button>
         {/* Adjusted font style */}
-        <span className="font-bold text-xl text-gray-300 tracking-wide">{currentIndex + 1} / {data.length}</span> 
+        <span className="font-semibold text-lg sm:text-xl text-gray-300 tracking-wide">{currentIndex + 1} / {data.length}</span>
         <button
             onClick={handleNextQuestion}
-            className="p-4 px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-xl 
-                       hover:from-indigo-600 hover:to-blue-600 transition-all duration-200 
+            className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-lg sm:text-xl
+                       hover:from-indigo-600 hover:to-blue-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === data.length - 1}
             aria-label="Next question"
