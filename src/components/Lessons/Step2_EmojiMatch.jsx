@@ -1,78 +1,125 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
-function Step2_EmojiMatch({ data }) {
+// Component receives data and the onAnswer callback
+function Step2_EmojiMatch({ data, onAnswer }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
+  const [startTime, setStartTime] = useState(Date.now());
 
-  // This check ensures data is a valid array before we try to use it.
+  // Reset timer when the question changes
+  useEffect(() => {
+    setStartTime(Date.now());
+    // Also reset selection when navigating between questions
+    setSelected(null);
+  }, [currentIndex]);
+
+  // Data validation
   if (!Array.isArray(data) || data.length === 0) {
-    return <div>Error: No questions found for this step.</div>;
+    return <div className="text-red-400">Error: No questions found for this step.</div>;
   }
-
   const currentQuestion = data[currentIndex];
-
-  // This guard clause is crucial. If we navigate past the last question,
-  // currentQuestion will be undefined. This stops the component from trying to render
-  // and prevents the "cannot read properties of undefined" crash.
   if (!currentQuestion) {
-    return null; 
+    console.error("Invalid current question index:", currentIndex);
+    return <div className="text-red-400">Error: Could not load question.</div>;
   }
 
+  // Handle selecting an answer
+  const handleSelectOption = (option) => {
+    if (selected) return; // Prevent changing answer
+
+    const reactionTime = (Date.now() - startTime) / 1000;
+    const isCorrect = option === currentQuestion.correctAnswer;
+    setSelected(option);
+
+    // Report performance data back to the parent LessonPage
+    if (onAnswer) {
+      onAnswer({
+        type: 'emojiMatch',
+        isCorrect,
+        reactionTime,
+      });
+    }
+  };
+
+  // Navigation handlers
   const handleNextQuestion = () => {
-    // Only proceed if there is a next question
     if (currentIndex < data.length - 1) {
-      setSelected(null); // Reset selection for the new question
-      setCurrentIndex((prev) => prev + 1); // Go to the next index
+      setCurrentIndex((prev) => prev + 1);
     }
   };
-
   const handlePrevQuestion = () => {
-    // Only proceed if there is a previous question
     if (currentIndex > 0) {
-      setSelected(null); // Reset selection
-      setCurrentIndex((prev) => prev - 1); // Go to the previous index
+      setCurrentIndex((prev) => prev - 1);
     }
   };
 
+  // Determine button styling based on selection and correctness
   const getButtonClass = (option) => {
-    if (selected === null) return 'bg-slate-700 hover:bg-slate-600 border-slate-600';
-    if (option === currentQuestion.correctAnswer) return 'bg-green-600 border-green-500';
-    if (option === selected && option !== currentQuestion.correctAnswer) return 'bg-red-600 border-red-500';
-    return 'bg-slate-700 opacity-50 border-slate-600';
+    const baseStyle = `p-4 rounded-lg border-2 font-semibold text-xl text-white transition-all duration-300 w-full shadow-md hover:shadow-lg`;
+    
+    if (selected === null) {
+      // Unselected state - Subtle gradient, hover effect
+      return `${baseStyle} bg-gradient-to-br from-slate-700 to-slate-800 border-slate-600 hover:from-slate-600 hover:to-slate-700 hover:scale-[1.03] transform`;
+    }
+    
+    // Selected state - Show correct/incorrect
+    const isCorrectAnswer = option === currentQuestion.correctAnswer;
+    const isSelectedAnswer = option === selected;
+
+    if (isCorrectAnswer) {
+      // Correct answer is always green after selection
+      return `${baseStyle} bg-gradient-to-br from-green-600 to-emerald-700 border-green-500 scale-[1.05] shadow-green-500/30`;
+    }
+    if (isSelectedAnswer) {
+      // Incorrectly selected answer is red
+      return `${baseStyle} bg-gradient-to-br from-red-600 to-rose-700 border-red-500`;
+    }
+    // Other options are dimmed after selection
+    return `${baseStyle} bg-slate-800 border-slate-700 opacity-40 cursor-not-allowed`;
   };
 
   return (
-    <div className="w-full max-w-lg flex flex-col items-center">
-      {/* Question Area */}
-      <div className="text-7xl mb-4">{currentQuestion.emoji}</div>
-      <p className="text-lg text-gray-300 mb-6">{currentQuestion.question}</p>
-      <div className="grid grid-cols-2 gap-4 w-full">
+    <div className="w-full max-w-2xl flex flex-col items-center p-4"> {/* Increased max-width */}
+      {/* Question Area - Enhanced styling */}
+      <div className="text-8xl mb-6 drop-shadow-lg">{currentQuestion.emoji}</div>
+      <p className="text-2xl text-gray-200 mb-8 text-center font-medium">{currentQuestion.question}</p>
+      
+      {/* Answer Options Grid */}
+      <div className="grid grid-cols-2 gap-5 w-full mb-8"> {/* Increased gap */}
         {currentQuestion.options.map((option) => (
           <button
             key={option}
-            onClick={() => setSelected(option)}
+            onClick={() => handleSelectOption(option)}
             disabled={selected !== null}
-            className={`p-4 rounded-lg border-2 font-semibold text-xl transition-all ${getButtonClass(option)}`}
+            className={getButtonClass(option)}
           >
             {option}
           </button>
         ))}
       </div>
 
-      {/* Navigation for Questions */}
-      <div className="flex items-center gap-8 mt-8">
-        <button 
-            onClick={handlePrevQuestion} 
+      {/* Navigation - Matching Flip Card style */}
+      <div className="flex items-center justify-between w-full max-w-md mt-6">
+         <button
+            onClick={handlePrevQuestion}
+            className="p-4 px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-xl 
+                       hover:from-purple-600 hover:to-indigo-600 transition-all duration-200 
+                       shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === 0}
-            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            aria-label="Previous question"
+        >
             <FaArrowLeft />
         </button>
-        <span className="font-semibold">{currentIndex + 1} / {data.length}</span>
-        <button 
+        <span className="font-bold text-xl text-gray-300 tracking-wide">{currentIndex + 1} / {data.length}</span>
+        <button
             onClick={handleNextQuestion}
+            className="p-4 px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-xl 
+                       hover:from-indigo-600 hover:to-blue-600 transition-all duration-200 
+                       shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
             disabled={currentIndex === data.length - 1}
-            className="p-3 bg-slate-700 rounded-full hover:bg-slate-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+            aria-label="Next question"
+        >
             <FaArrowRight />
         </button>
       </div>

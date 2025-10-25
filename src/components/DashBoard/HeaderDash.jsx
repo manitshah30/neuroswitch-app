@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import logoImg from '../../assets/Logo.png'; // Make sure the path is correct
+import logoImg from '../../assets/Logo.png';
+// 1. Import the useAuth hook to connect to the "auth brain"
+import { useAuth } from '../../context/AuthContext';
 
 function HeaderDash() {
-  // This state will track if the mobile menu is open or closed
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // 2. Get the current user's data and the logout function from the context
+  const { currentUser, logout } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-[#1F1E1E]/80 backdrop-blur-lg border-b border-white/10">
@@ -16,8 +19,9 @@ function HeaderDash() {
           <span className="text-xl md:text-3xl font-bold text-white">NeuroSwitch</span>
         </Link>
 
-        {/* Center: Desktop Navigation Links (hidden on mobile) */}
-        <nav className="hidden md:flex items-center gap-8">
+        
+        {/* <nav className="hidden md:flex items-center gap-8">
+          
           <Link to="/dashboard" className="flex items-center gap-2 text-brand-text hover:text-white transition-colors font-semibold">
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
             <span>Dashboard</span>
@@ -30,16 +34,23 @@ function HeaderDash() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             <span>About Us</span>
           </Link>
-        </nav>
+        </nav> */}
 
-        {/* Right Side: User Profile (hidden on mobile) */}
+        {/* --- MODIFIED PART --- */}
+        {/* Right Side: User Profile & Logout (hidden on mobile) */}
         <div className="hidden md:flex items-center gap-4">
           <div className="text-right">
-            <p className="font-semibold text-sm text-brand-text">Alex R.</p>
+            {/* 3. Display the logged-in user's name */}
+            <p className="font-semibold text-sm text-brand-text">{currentUser?.name || 'User'}</p>
           </div>
           <div className="w-10 h-10 rounded-full bg-brand-accent flex items-center justify-center font-bold text-white border-2 border-white/50">
-            A
+            {/* 4. Display the user's initial */}
+            {currentUser?.name ? currentUser.name[0].toUpperCase() : 'U'}
           </div>
+          {/* 5. Add a functional Logout button */}
+          <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-lg transition-colors">
+            Logout
+          </button>
         </div>
 
         {/* Mobile Menu Button (Hamburger) */}
@@ -50,14 +61,18 @@ function HeaderDash() {
         </div>
       </div>
 
+      {/* --- MODIFIED PART --- */}
       {/* Mobile Menu Dropdown */}
       {isMenuOpen && (
         <div className="md:hidden bg-[#1F1E1E] pb-4">
           <nav className="flex flex-col items-center gap-4">
-            <Link to="/dashboard" className="flex items-center gap-2 text-brand-text hover:text-white transition-colors font-semibold">Dashboard</Link>
-            <Link to="/learn" className="flex items-center gap-2 text-brand-text-muted hover:text-white transition-colors font-semibold">Learn</Link>
-            <Link to="/about" className="flex items-center gap-2 text-brand-text-muted hover:text-white transition-colors font-semibold">About Us</Link>
-            {/* You can add the user profile link here for mobile as well */}
+            <Link to="/dashboard" className="text-brand-text hover:text-white font-semibold">Dashboard</Link>
+            <Link to="/learn" className="text-brand-text-muted hover:text-white font-semibold">Learn</Link>
+            <Link to="/about" className="text-brand-text-muted hover:text-white font-semibold">About Us</Link>
+            {/* 6. Add a Logout button for the mobile menu */}
+            <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-2">
+              Logout
+            </button>
           </nav>
         </div>
       )}
@@ -66,3 +81,4 @@ function HeaderDash() {
 }
 
 export default HeaderDash;
+
