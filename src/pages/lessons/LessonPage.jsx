@@ -5,12 +5,12 @@ import { useAuth } from "../../context/AuthContext";
 import { calculateCognitiveScores, saveScores, calculateXPEarned } from "../../utils/scoringUtils";
 // NEW: Import the addXP function
 import { addXP } from "../../utils/progressUtils"; 
-import Step1_FlipCard from "../../components/lessons/Step1_FlipCard";
-import Step2_EmojiMatch from "../../components/lessons/Step2_EmojiMatch";
-import Step3_MultipleChoice from "../../components/lessons/Step3_MultipleChoice";
+import Step1_FlipCard from "../../components/Lessons/Step1_FlipCard";
+import Step2_EmojiMatch from "../../components/Lessons/Step2_EmojiMatch";
+import Step3_MultipleChoice from "../../components/Lessons/Step3_MultipleChoice";
 import StarryBackground from "../../components/effects/StarryBackground";
-import ProgressBar from "../../components/lessons/ProgressBar";
-import LessonResults from "../../components/lessons/LessonResults";
+import ProgressBar from "../../components/Lessons/ProgressBar";
+import LessonResults from "../../components/Lessons/LessonResults";
 import "../../App.css";
 
 import { databases } from "../../appwrite/config";
