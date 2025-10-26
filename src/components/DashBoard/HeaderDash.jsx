@@ -66,9 +66,9 @@ function HeaderDash() {
       {isMenuOpen && (
         <div className="md:hidden bg-[#1F1E1E] pb-4">
           <nav className="flex flex-col items-center gap-4">
-            <Link to="/dashboard" className="text-brand-text hover:text-white font-semibold">Dashboard</Link>
+            {/* <Link to="/dashboard" className="text-brand-text hover:text-white font-semibold">Dashboard</Link>
             <Link to="/learn" className="text-brand-text-muted hover:text-white font-semibold">Learn</Link>
-            <Link to="/about" className="text-brand-text-muted hover:text-white font-semibold">About Us</Link>
+            <Link to="/about" className="text-brand-text-muted hover:text-white font-semibold">About Us</Link> */}
             {/* 6. Add a Logout button for the mobile menu */}
             <button onClick={logout} className="bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors mt-2">
               Logout

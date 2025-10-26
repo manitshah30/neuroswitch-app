@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'; // Import useEffect
 import { FaArrowLeft, FaArrowRight } from 'react-icons/fa';
 
 // Component receives data and the onAnswer callback
-function Step3_MultipleChoice({ data, onAnswer }) {
+function Step3_MultipleChoice({ data, onAnswer, onStepComplete }) { // Added onStepComplete prop
   const [currentIndex, setCurrentIndex] = useState(0);
   const [selected, setSelected] = useState(null);
   const [startTime, setStartTime] = useState(Date.now()); // State to track when the question appears
@@ -13,6 +13,17 @@ function Step3_MultipleChoice({ data, onAnswer }) {
     setSelected(null); // Reset selection for the new question
   }, [currentIndex]);
 
+  // --- NEW: Effect to report completion status ---
+  useEffect(() => {
+    // Determine if the current question is the last one
+    const isLastQuestion = currentIndex === data.length - 1;
+    if (onStepComplete) {
+      // Report complete if on the last question AND an answer has been selected
+      onStepComplete(isLastQuestion && selected !== null);
+    }
+    // Rerun whenever the index or selected state changes
+  }, [currentIndex, selected, data.length, onStepComplete]);
+  // --- END NEW ---
 
   // Guard clause for data integrity
   if (!Array.isArray(data) || data.length === 0) {
@@ -111,6 +122,7 @@ function Step3_MultipleChoice({ data, onAnswer }) {
             className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-purple-700 to-indigo-700 rounded-full text-white text-lg sm:text-xl
                        hover:from-purple-600 hover:to-indigo-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
+            // Disable button visually if on the first question
             disabled={currentIndex === 0}
             aria-label="Previous question"
         >
@@ -123,6 +135,7 @@ function Step3_MultipleChoice({ data, onAnswer }) {
             className="p-3 px-4 sm:p-4 sm:px-6 bg-gradient-to-br from-indigo-700 to-blue-700 rounded-full text-white text-lg sm:text-xl
                        hover:from-indigo-600 hover:to-blue-600 transition-all duration-200
                        shadow-lg hover:shadow-xl disabled:opacity-30 disabled:cursor-not-allowed disabled:shadow-none"
+             // Disable button visually if on the last question
             disabled={currentIndex === data.length - 1}
             aria-label="Next question"
         >

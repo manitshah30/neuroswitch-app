@@ -9,7 +9,7 @@ import { FaLock, FaCheck } from 'react-icons/fa';
 import logoImg from '../../assets/Logo.png';
 import { useAuth } from '../../context/AuthContext';
 
-// --- Reusable 3D Components (Planet, Atmosphere remain the same) ---
+// --- Reusable 3D Components ---
 const Planet = React.memo(() => {
   const planetRef = useRef();
   const texture = useMemo(() => {
@@ -53,16 +53,11 @@ const Atmosphere = React.memo(() => (
 const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOver, onPointerOut }) => {
     const pivotRef = useRef();
     const meshRef = useRef();
-
-    // Lesson state logic - REMOVED isUnlocked
     const isCompleted = index < userProgress;
-    // const isUnlocked = index === userProgress; // Removed - Was unused
     const isLocked = index > userProgress;
-
     const [hovered, setHovered] = useState(false);
     useCursor(hovered && !isLocked);
 
-    // --- Responsive Radius Calculation ---
     const { position, rotation, speed } = useMemo(() => {
         const angle = index * 0.9;
         const baseRadius = isMobile ? 5 : 6;
@@ -78,21 +73,23 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     useFrame((state, delta) => {
         if (pivotRef.current) pivotRef.current.rotation.y += speed;
         if (meshRef.current) {
-        meshRef.current.rotation.x += 0.01;
-        meshRef.current.rotation.y += 0.01;
-        meshRef.current.material.emissiveIntensity = THREE.MathUtils.lerp(
-            meshRef.current.material.emissiveIntensity,
-            hovered && !isLocked ? 0.7 : 0,
-            delta * 10
-        );
+            meshRef.current.rotation.x += 0.01;
+            meshRef.current.rotation.y += 0.01;
+            meshRef.current.material.emissiveIntensity = THREE.MathUtils.lerp(
+                meshRef.current.material.emissiveIntensity,
+                hovered && !isLocked ? 0.7 : 0,
+                delta * 10
+            );
         }
-    });
+     });
 
     const colorMap = { 'Easy': 0x87CEEB, 'Medium': 0x9370DB, 'Hard': 0xCC0000 };
     let currentColor = colorMap[lesson.difficulty];
-
     if (isLocked) currentColor = 0x666666;
     if (isCompleted) currentColor = 0x00ff00;
+
+    // --- Slightly larger size, especially on mobile ---
+    const asteroidSize = isMobile ? 0.55 : 0.6; // Increased size
 
     return (
         <group ref={pivotRef}>
@@ -104,25 +101,27 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
             onPointerOver={(e) => { if (!isLocked) { e.stopPropagation(); setHovered(true); onPointerOver(); } }}
             onPointerOut={(e) => { if (!isLocked) { e.stopPropagation(); setHovered(false); onPointerOut(); } }}
         >
-            <icosahedronGeometry args={[isMobile ? 0.4 : 0.5, 1]} />
+            {/* Use the larger asteroidSize */}
+            <icosahedronGeometry args={[asteroidSize, 1]} />
             <meshPhongMaterial
-            color={currentColor}
-            emissive={!isLocked ? 0xaaaaaa : 0x000000}
-            emissiveIntensity={0}
-            flatShading={true}
-            transparent={isLocked}
-            opacity={isLocked ? 0.4 : 1.0}
+                color={currentColor}
+                emissive={!isLocked ? 0xaaaaaa : 0x000000}
+                emissiveIntensity={0}
+                flatShading={true}
+                transparent={isLocked}
+                opacity={isLocked ? 0.4 : 1.0}
             />
+            {/* Icons remain click-through */}
             {isLocked && (
-            <Html center>
-                <div className="pointer-events-none">
+            <Html center pointerEvents="none">
+                <div>
                 <FaLock className={`text-white opacity-70 ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
             </Html>
             )}
             {isCompleted && (
-            <Html center>
-                <div className="pointer-events-none">
+            <Html center pointerEvents="none">
+                <div>
                 <FaCheck className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} />
                 </div>
             </Html>
@@ -133,7 +132,6 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
 };
 
 // --- Main Page Component ---
-
 function VocabularyGamePage() {
   const navigate = useNavigate();
   const [selectedLessonIndex, setSelectedLessonIndex] = useState(null);
@@ -142,9 +140,7 @@ function VocabularyGamePage() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -177,20 +173,20 @@ function VocabularyGamePage() {
 
   const getLessonStatus = (index) => {
     if (index < userProgress) return 'completed';
-    if (index === userProgress) return 'unlocked'; // This return value isn't used by Asteroid, but function is still useful elsewhere
+    if (index === userProgress) return 'unlocked';
     return 'locked';
   };
 
-  if (authLoading || userProgress === null) {
-    return (
-      <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
-          <p>Loading Your Progress...</p>
-        </div>
-      </div>
-    );
-  }
+   if (authLoading || userProgress === null) {
+     return (
+       <div className="bg-slate-900 min-h-screen flex items-center justify-center text-white">
+         <div className="text-center">
+           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500 mx-auto mb-4"></div>
+           <p>Loading Your Progress...</p>
+         </div>
+       </div>
+     );
+   }
 
   const cameraSettings = isMobile
     ? { position: [0, 0, 20], fov: 60 }
@@ -203,7 +199,7 @@ function VocabularyGamePage() {
         className="absolute inset-0"
         onPointerMissed={() => setSelectedLessonIndex(null)}
       >
-        <ambientLight intensity={0.5} />
+         <ambientLight intensity={0.5} />
         <directionalLight position={[5, 5, 5]} intensity={1} />
         <Stars radius={200} depth={50} count={5000} factor={10} saturation={0} fade speed={1} />
         <Planet />
@@ -224,7 +220,7 @@ function VocabularyGamePage() {
 
       <div className="absolute inset-0 flex flex-col p-3 sm:p-4 md:p-8 ui-overlay pointer-events-none">
         <header className="w-full max-w-7xl mx-auto flex justify-between items-center pointer-events-auto">
-          <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
+           <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
             <img src={logoImg} alt="NeuroSwitch Logo" className="w-8 h-8 sm:w-11 sm:h-11" />
             <span className="text-lg sm:text-2xl font-bold text-white">NeuroSwitch</span>
           </Link>
@@ -243,36 +239,36 @@ function VocabularyGamePage() {
 
         <main className="flex-grow flex flex-col justify-end items-center text-center pb-4 sm:pb-8">
           <div
-            className={`glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-sm sm:max-w-md mb-4 sm:mb-8 transition-all duration-300 ease-out
+            className={`glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-[95%] sm:max-w-md md:max-w-lg mb-4 sm:mb-8 transition-all duration-300 ease-out
               ${selectedLesson ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-5 pointer-events-none'}`}
           >
             {selectedLesson && (
               <>
-                <div className="flex items-center justify-between mb-1 sm:mb-2">
-                  <h2 className="text-lg sm:text-2xl font-bold text-white text-left">
+                <div className="flex items-start justify-between mb-2 sm:mb-3">
+                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-white text-left leading-tight">
                     Lesson {selectedLessonIndex + 1}: {selectedLesson.name}
                   </h2>
                   {getLessonStatus(selectedLessonIndex) === 'completed' && (
-                    <FaCheck className="text-green-400 text-lg sm:text-xl" />
+                    <FaCheck className="text-green-400 text-xl sm:text-2xl flex-shrink-0 ml-3 mt-1" />
                   )}
                 </div>
-                <p className="text-gray-400 text-sm sm:text-base mt-1 sm:mt-2 text-left">{selectedLesson.description}</p>
-                <div className="flex justify-between items-center mt-3 sm:mt-4">
-                    <span className={`inline-block text-xs font-semibold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full ${difficultyMap[selectedLesson.difficulty]?.className}`}>
+                <p className="text-gray-300 text-sm sm:text-base mt-1 sm:mt-2 text-left mb-4 sm:mb-5">{selectedLesson.description}</p>
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+                    <span className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${difficultyMap[selectedLesson.difficulty]?.className} self-start sm:self-center`}>
                     Difficulty: {selectedLesson.difficulty}
                     </span>
                     <button
-                    onClick={handleStartLesson}
-                    className="bg-gradient-to-r from-[#A78BFA] to-[#C1CFFB] text-white font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-lg hover:opacity-90 transition-opacity transform hover:scale-105 text-sm sm:text-base"
+                        onClick={handleStartLesson}
+                        className="w-full sm:w-auto bg-gradient-to-r from-[#A78BFA] to-[#C1CFFB] text-white font-bold py-3 px-6 rounded-lg hover:opacity-90 transition-opacity transform hover:scale-105 text-base shadow-md hover:shadow-lg"
                     >
-                    {getLessonStatus(selectedLessonIndex) === 'completed' ? 'Replay' : 'Start'}
+                    {getLessonStatus(selectedLessonIndex) === 'completed' ? 'Replay Mission' : 'Start Mission'}
                     </button>
                 </div>
               </>
             )}
           </div>
           {!selectedLesson && !isHovering && (
-            <p className="text-gray-500 text-base sm:text-lg">
+             <p className="text-gray-500 text-base sm:text-lg">
               Select an asteroid to begin.
             </p>
           )}
