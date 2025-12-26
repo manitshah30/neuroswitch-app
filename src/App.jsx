@@ -10,10 +10,13 @@ import AudioScramble from "./components/Games/AudioScramble";
 import StoryMode from "./components/Games/StoryMode";
 import LessonPage from "./pages/lessons/LessonPage";
 import TestPage from "./pages/TestPage";
+import TermsOfService from "./components/LandingPage/TermsOfService";
+import PrivacyPolicy from "./components/LandingPage/PrivacyPolicy";
 
 // 1. Import the two guard components we created
 import LoggedInRoute from './components/auth/LoggedInRoute';
 import LoggedOutRoute from './components/auth/LoggedOutRoute';
+import AdminExport from "./pages/AdminExport";
 
 function App() {
   return (
@@ -22,6 +25,8 @@ function App() {
       {/* --- Public Route --- */}
       {/* Anyone can see the landing page */}
       <Route path="/" element={<LandPg />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
 
       {/* --- Routes for LOGGED-OUT Users Only --- */}
       {/* This guard protects the sign-in page */}
@@ -38,6 +43,8 @@ function App() {
         <Route path="/Games/scramble" element={<AudioScramble />} />
         <Route path="/Games/story" element={<StoryMode />} />
         <Route path="/lesson/:lessonId" element={<LessonPage />} />
+
+        <Route path="/admin-export" element={<AdminExport />} />
       </Route>
 
       {/* 2. Add this temporary route for debugging */}

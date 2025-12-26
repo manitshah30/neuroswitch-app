@@ -8,45 +8,26 @@ import { isDailyRewardAvailable, claimDailyReward } from '../../utils/progressUt
 import MissionCard from './MissionCard';
 import DailyRewardCard from './DailyRewardCard';
 import StarryBackground from '../effects/StarryBackground';
-import CognitiveCoreCard from './CognitiveCoreCard';
-import CogCoreCard from './CogCoreCard'; // Assuming this component exists
-import LearningUniverse from './LearningUniverse'; // Assuming this component exists
+import CognitiveCoreCard from './CogCoreCard'; 
+import LearningUniverse from './LearningUniverse'; 
 import AchievementsCard from './AchievementsCard';
-// REMOVED: WeeklyRanksCard import
 
 // Get IDs from environment variables
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const LESSONS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_LESSONS_TABLE_ID;
 const PERFORMANCE_COLLECTION_ID = import.meta.env.VITE_APPWRITE_PERFORMANCEMETRICS_ID;
-// REMOVED: USERPROGRESS_COLLECTION_ID is no longer needed here
-
-// --- Define Achievements ---
-const ALL_ACHIEVEMENTS = [
-  { id: 'lesson1', name: 'First Steps', description: 'Complete your first lesson.', icon: '🚀' },
-  { id: 'phase1', name: 'Phase 1 Complete', description: 'Complete all 7 lessons in Phase 1.', icon: '⭐' },
-  { id: 'xp100', name: 'XP Explorer', description: 'Reach 100 Total XP.', icon: '💡' },
-  { id: 'xp500', name: 'XP Adept', description: 'Reach 500 Total XP.', icon: '🌟' },
-  { id: 'xp1000', name: 'XP Master', description: 'Reach 1000 Total XP.', icon: '🏆' },
-  { id: 'perfAttention', name: 'Sharp Shooter', description: 'Achieve 100% Attention Score in a lesson.', icon: '🎯' },
-  { id: 'perfMemory', name: 'Memory Whiz', description: 'Achieve 100% Memory Score in a lesson.', icon: '🧠' },
-  { id: 'perfSpeed', name: 'Lightning Fast', description: 'Achieve 100% Speed Score in a lesson.', icon: '⚡' },
-  { id: 'perfPerfect', name: 'Perfectionist', description: 'Achieve 100% in all scores in a single lesson.', icon: '💯' },
-];
-
 
 function DashboardPage() {
   const { currentUser, userProgress, totalXP, addXPToState, loading } = useAuth();
 
   const [currentMission, setCurrentMission] = useState(null);
   const [averageScores, setAverageScores] = useState(null);
-  // REMOVED: leaderboard state
   const [isRewardAvailable, setIsRewardAvailable] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [earnedAchievements, setEarnedAchievements] = useState([]);
   const [performanceHistory, setPerformanceHistory] = useState([]);
 
-
-  // --- Combined useEffect for fetching data (excluding leaderboard) ---
+  // --- Fetch Data ---
   useEffect(() => {
     if (!currentUser || loading) return;
 
@@ -83,8 +64,6 @@ function DashboardPage() {
         const available = await isDailyRewardAvailable(currentUser.$id);
         setIsRewardAvailable(available);
 
-        // REMOVED: Leaderboard fetching logic
-
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         setAverageScores({ attention: 0, memory: 0, speed: 0 });
@@ -94,62 +73,80 @@ function DashboardPage() {
 
     fetchAllData();
 
-  }, [currentUser, loading]); // REMOVED: totalXP dependency no longer needed here
+  }, [currentUser, loading]);
 
-
-  // --- useEffect to fetch the current mission ---
+  // --- MISSION LOGIC UPDATE ---
   useEffect(() => {
     const fetchCurrentMission = async () => {
-        if (typeof userProgress === 'number' && userProgress < 7) {
+        const MAX_LESSONS = 28; 
+
+        if (typeof userProgress === 'number' && userProgress < MAX_LESSONS) {
           try {
+            const nextLessonId = userProgress + 1;
             const response = await databases.listDocuments(
               DATABASE_ID,
               LESSONS_COLLECTION_ID,
-              [Query.equal('lessonId', userProgress + 1)]
+              [Query.equal('lessonId', nextLessonId)]
             );
+            
             if (response.documents.length > 0) {
               setCurrentMission(response.documents[0]);
             } else {
-              setCurrentMission({ title: `Lesson ${userProgress + 1} Coming Soon`, description: "Keep up the great work!" });
+              setCurrentMission({ 
+                  title: `Lesson ${nextLessonId}`, 
+                  description: "Continue your journey to the next level." 
+              });
             }
           } catch (error) {
             console.error("Failed to fetch current mission:", error);
-            setCurrentMission({ title: "Error Loading Mission", description: "Could not load next lesson." });
+            setCurrentMission({ title: "Mission Unavailable", description: "Could not load mission details." });
           }
-        } else if (userProgress >= 7) {
-          setCurrentMission({ title: "All lessons completed!", description: "Check back later for new content." });
+        } else if (userProgress >= MAX_LESSONS) {
+          setCurrentMission({ title: "Galactic Master!", description: "You have completed all available content." });
         } else {
            setCurrentMission(null);
         }
       };
+
       if (!loading) {
         fetchCurrentMission();
       }
   }, [userProgress, loading]);
 
-  // --- useEffect to check which achievements are earned ---
+  // --- Achievements Check ---
   useEffect(() => {
     if (loading || averageScores === null || userProgress === null || totalXP === null) return;
 
     const checkAchievements = () => {
       const earned = [];
-      if (userProgress >= 1) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'lesson1'));
-      if (userProgress >= 7) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'phase1'));
-      if (totalXP >= 100) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'xp100'));
-      if (totalXP >= 500) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'xp500'));
-      if (totalXP >= 1000) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'xp1000'));
+      
+      // Lesson Progress Checks
+      if (userProgress >= 1) earned.push({ id: 'lesson1' });
+      if (userProgress >= 7) earned.push({ id: 'phase1' });
+      if (userProgress >= 14) earned.push({ id: 'phase2' });
+      if (userProgress >= 21) earned.push({ id: 'phase3' });
+      if (userProgress >= 28) earned.push({ id: 'phase4' });
+
+      // XP Checks
+      if (totalXP >= 100) earned.push({ id: 'xp100' });
+      if (totalXP >= 500) earned.push({ id: 'xp500' });
+      if (totalXP >= 1000) earned.push({ id: 'xp1000' });
+      if (totalXP >= 5000) earned.push({ id: 'xp5000' });
+      
+      // Performance Checks
       const hasPerfectAttention = performanceHistory.some(h => h.attentionScore === 100);
       const hasPerfectMemory = performanceHistory.some(h => h.memoryScore === 100);
       const hasPerfectSpeed = performanceHistory.some(h => h.speedScore === 100);
       const hasPerfectLesson = performanceHistory.some(h =>
           h.attentionScore === 100 && h.memoryScore === 100 && h.speedScore === 100
       );
-      if (hasPerfectAttention) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'perfAttention'));
-      if (hasPerfectMemory) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'perfMemory'));
-      if (hasPerfectSpeed) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'perfSpeed'));
-      if (hasPerfectLesson) earned.push(ALL_ACHIEVEMENTS.find(a => a.id === 'perfPerfect'));
-      const finalEarned = earned.filter(Boolean);
-      setEarnedAchievements(finalEarned);
+
+      if (hasPerfectAttention) earned.push({ id: 'perfAttention' });
+      if (hasPerfectMemory) earned.push({ id: 'perfMemory' });
+      if (hasPerfectSpeed) earned.push({ id: 'perfSpeed' });
+      if (hasPerfectLesson) earned.push({ id: 'perfPerfect' });
+      
+      setEarnedAchievements(earned);
     };
     checkAchievements();
   }, [userProgress, totalXP, performanceHistory, loading, averageScores]);
@@ -164,6 +161,15 @@ function DashboardPage() {
        addXPToState(dailyRewardAmount);
      }
      setIsClaiming(false);
+  };
+
+  // --- LINK LOGIC FOR MISSION CARD ---
+  const getMissionLink = () => {
+      if (!userProgress) return "/games/vocabulary";
+      if (userProgress < 7) return "/games/vocabulary";          // Phase 1
+      if (userProgress < 14) return "/games/picture-association"; // Phase 2
+      if (userProgress < 21) return "/games/audio";              // Phase 3
+      return "/games/story";                                     // Phase 4
   };
 
   if (loading || averageScores === null) {
@@ -189,46 +195,37 @@ function DashboardPage() {
                 </p>
             </div>
 
-            {/* --- CORRECTED SIDE-BY-SIDE LAYOUT --- */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                {/* MissionCard takes 2 columns on large screens */}
                 <div className="lg:col-span-2">
-                    <Link to="/games/vocabulary">
+                    <Link to={getMissionLink()}>
                         <MissionCard
-                        missionTitle={currentMission ? (userProgress < 7 ? `Lesson ${userProgress + 1}: ${currentMission.title}` : currentMission.title) : "Loading Mission..."}
+                        missionTitle={currentMission ? currentMission.title : "Loading Mission..."}
                         missionDescription={currentMission?.description || "Continue your learning journey."}
-                        rewardXP="+250"
                         />
                     </Link>
                 </div>
-                {/* DailyRewardCard takes 1 column on large screens */}
                 <DailyRewardCard
                   isClaimed={!isRewardAvailable}
                   isClaiming={isClaiming}
                   onClaim={handleClaimReward}
                 />
             </div>
-            {/* --- END CORRECTED LAYOUT --- */}
-
 
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-white mb-8">Your Performance Data</h2>
-            <div className="w-full max-w-4xl mx-auto h-[450px]">
+            <div className="w-full max-w-4xl mx-auto h-[500px]">
               <CognitiveCoreCard averageScores={averageScores} />
             </div>
-            <div className="mt-12 max-w-4xl mx-auto h-[500px]">
-              <CogCoreCard averageScores={averageScores} />
-            </div>
           </div>
+          
           <LearningUniverse />
+          
           <section className="py-16">
             <div className="text-center mb-12">
                 <h2 className="text-4xl font-bold text-white">Community & Progression</h2>
             </div>
-            {/* REMOVED: Adjusted grid, only AchievementsCard remains */}
-            <div className="max-w-3xl mx-auto"> {/* Centered the remaining card */}
+            <div className="max-w-3xl mx-auto"> 
                 <AchievementsCard achievements={earnedAchievements} />
-                {/* REMOVED: WeeklyRanksCard */}
             </div>
           </section>
         </main>
@@ -238,4 +235,3 @@ function DashboardPage() {
 }
 
 export default DashboardPage;
-

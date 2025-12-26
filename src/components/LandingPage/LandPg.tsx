@@ -11,21 +11,34 @@ import Footer from './Footer'
 
 function LandPg() {
   return (
-    // We set the background color on the root div
     <div className="bg-[#1F1E1E]">
-      <Navbar  />
-      {/* And here we render our complete, self-contained HeroSection component */}
-      <HeroSection />
+      <Navbar />
+      
+      {/* 1. Add ID for Home */}
+      <div id="home">
+        <HeroSection />
+      </div>
 
-      {/* In the future, we will add other sections here like this: */}
-      <AboutUs/>
-      <FeatureCard/>
-      <CognitiveSkillsSection/>
+      {/* 2. Add ID for About Us */}
+      <div id="about">
+        <AboutUs/>
+      </div>
+
+      {/* 3. Add ID for Features (Wrapping both feature sections if you want) */}
+      <div id="features">
+        <FeatureCard/>
+        <CognitiveSkillsSection/>
+      </div>
+
       <TimelineSection/>
       <PhasesCarousel/>
-      <TestimonialsSection/>
-      <Footer/>
 
+      {/* 4. Add ID for Testimonials */}
+      <div id="testimonials">
+        <TestimonialsSection/>
+      </div>
+
+      <Footer/>
     </div>
   )
 }

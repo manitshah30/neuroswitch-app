@@ -8,6 +8,10 @@ body {
     background-color: #1F1E1E;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 /* This is the container for our two blurred circles */
 .aurora-bg {
     position: absolute;

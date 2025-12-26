@@ -1,4 +1,4 @@
-import { Client, Account, Databases } from 'appwrite';
+import { Client, Account, Databases, Functions } from 'appwrite';
 
 // This is the "phone line" to your Appwrite backend
 const client = new Client();
@@ -10,3 +10,7 @@ client
 // This creates services that you can use in your app
 export const account = new Account(client);
 export const databases = new Databases(client);
+export const functions = new Functions(client);
+
+export { client };
+

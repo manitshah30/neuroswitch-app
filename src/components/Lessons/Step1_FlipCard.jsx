@@ -8,11 +8,11 @@ const flipCardCSS = `
 .flip-card-inner { position: relative; width: 100%; height: 100%; text-align: center; transform-style: preserve-3d; }
 .flip-card.flipped .flip-card-inner { transform: rotateY(180deg); }
 .flip-card-front, .flip-card-back {
-    position: absolute; width: 100%; height: 100%;
-    backface-visibility: hidden; -webkit-backface-visibility: hidden;
-    display: flex; flex-direction: column; justify-content: center; align-items: center;
-    padding: 1rem; cursor: pointer; border-radius: 1rem; overflow: hidden;
-    border: 1px solid; transition: all 0.3s ease;
+  position: absolute; width: 100%; height: 100%;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding: 1rem; cursor: pointer; border-radius: 1rem; overflow: hidden;
+  border: 1px solid; transition: all 0.3s ease;
 }
 @media (min-width: 640px) { .flip-card-front, .flip-card-back { padding: 2rem; } }
 .flip-card-back { transform: rotateY(180deg); }
@@ -25,7 +25,7 @@ function Step1_FlipCard({ data, onAnswer, onStepComplete }) {
   const [flipCount, setFlipCount] = useState(0);
   const performanceRef = useRef();
 
-  // --- Logic for reporting performance (mostly the same) ---
+  // --- Logic for reporting performance ---
   useEffect(() => {
     performanceRef.current = { currentIndex, flipCount, onAnswer, data };
   });
@@ -44,49 +44,42 @@ function Step1_FlipCard({ data, onAnswer, onStepComplete }) {
     return () => { document.head.removeChild(styleElement); };
   }, []);
 
-  // --- NEW: Effect to report completion status ---
+  // --- Effect to report completion status ---
   useEffect(() => {
-    // Determine if the current card is the last one
     const isLastCard = currentIndex === data.length - 1;
-    // Call the callback from the parent to report status
     if (onStepComplete) {
       onStepComplete(isLastCard);
     }
-    // Rerun whenever the index changes
   }, [currentIndex, data.length, onStepComplete]);
-  // --- END NEW ---
 
 
   const handleFlip = () => {
-     setIsFlipped(!isFlipped);
-     setFlipCount(prev => prev + 1);
+      setIsFlipped(!isFlipped);
+      setFlipCount(prev => prev + 1);
   };
   const reportCurrentCardPerformance = () => {
-     if (onAnswer && flipCount > 0 && data && data[currentIndex]) {
-       onAnswer({
-         type: 'flipCard',
-         word: data[currentIndex].english,
-         flipCount: flipCount,
-       });
-     }
+      if (onAnswer && flipCount > 0 && data && data[currentIndex]) {
+        onAnswer({
+          type: 'flipCard',
+          word: data[currentIndex].english,
+          flipCount: flipCount,
+        });
+      }
   };
 
-  // --- UPDATED Navigation handlers to also trigger completion check ---
+  // --- Navigation handlers ---
   const handleNextCard = () => {
     reportCurrentCardPerformance();
     setIsFlipped(false); setFlipCount(0);
-    // Use modulo for wrapping, but state update triggers useEffect check
     setCurrentIndex((prev) => (prev + 1) % data.length);
   };
   const handlePrevCard = () => {
     reportCurrentCardPerformance();
     setIsFlipped(false); setFlipCount(0);
-     // Use modulo for wrapping, but state update triggers useEffect check
     setCurrentIndex((prev) => (prev - 1 + data.length) % data.length);
   };
-  // --- END UPDATED ---
 
-  // --- Data Validation (remains the same) ---
+  // --- Data Validation ---
   if (!Array.isArray(data) || data.length === 0) {
       return <div className="text-red-400">Error: No card data found.</div>;
   }
@@ -95,13 +88,15 @@ function Step1_FlipCard({ data, onAnswer, onStepComplete }) {
       console.error("Invalid current card index:", currentIndex);
       return <div className="text-red-400">Error: Could not load card.</div>;
   }
-  // --- End Data Validation ---
-
 
   return (
     <div className="w-full flex flex-col items-center px-2 sm:px-0">
-      {/* Card container (remains same) */}
-      <div className="relative w-full max-w-[300px] h-[200px] sm:max-w-[420px] sm:w-[420px] sm:h-[260px] perspective-1000 mb-6 sm:mb-8 group">
+      {/* FIX APPLIED HERE: 
+        Changed 'mb-6 sm:mb-8' to 'my-6 sm:my-8'.
+        This adds margin to the TOP as well, preventing the scale animation 
+        from cutting off against the element above it. 
+      */}
+      <div className="relative w-full max-w-[300px] h-[200px] sm:max-w-[420px] sm:w-[420px] sm:h-[260px] perspective-1000 my-6 sm:my-8 group z-10">
          {/* Card Content */}
          <div
           className={`flip-card w-full h-full ${isFlipped ? 'flipped' : ''} transition-transform duration-700 ease-in-out group-hover:scale-[1.03]`}
@@ -126,7 +121,7 @@ function Step1_FlipCard({ data, onAnswer, onStepComplete }) {
         </div>
       </div>
 
-      {/* Card Navigation (remains same) */}
+      {/* Card Navigation */}
       <div className="flex items-center justify-between w-full max-w-xs sm:max-w-md mt-4 sm:mt-6">
         <button
             onClick={handlePrevCard}
@@ -149,4 +144,3 @@ function Step1_FlipCard({ data, onAnswer, onStepComplete }) {
 }
 
 export default Step1_FlipCard;
-
