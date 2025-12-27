@@ -10,7 +10,6 @@ import logoImg from '../../assets/Logo.png';
 import { useAuth } from '../../context/AuthContext';
 
 // --- MAIN INTERACTIVE PLANET (Cyan) ---
-// Added scale prop for mobile resizing
 const Planet = React.memo(({ scale = 1 }) => {
   const planetRef = useRef();
   const texture = useMemo(() => {
@@ -38,7 +37,6 @@ const Planet = React.memo(({ scale = 1 }) => {
 });
 
 // --- ATMOSPHERE GLOW ---
-// Added scale prop
 const Atmosphere = React.memo(({ scale = 1 }) => (
   <Sphere args={[4.2, 64, 64]} scale={[scale, scale, scale]}>
     <shaderMaterial
@@ -50,16 +48,14 @@ const Atmosphere = React.memo(({ scale = 1 }) => (
   </Sphere>
 ));
 
-// --- BACKGROUND DECOR 1: RINGED PLANET ---
+// --- BACKGROUND DECOR 1 ---
 const RingPlanet = ({ position, size, color, ringColor }) => {
     const planetRef = useRef();
     const ringRef = useRef();
-
     useFrame(() => {
         if (planetRef.current) planetRef.current.rotation.y += 0.001;
         if (ringRef.current) ringRef.current.rotation.z -= 0.0005;
     });
-
     return (
         <group position={position}>
             <mesh ref={planetRef}>
@@ -74,10 +70,9 @@ const RingPlanet = ({ position, size, color, ringColor }) => {
     );
 };
 
-// --- BACKGROUND DECOR 2: DETAILED MOON ---
+// --- BACKGROUND DECOR 2 ---
 const DetailedMoon = ({ position, size, baseColor, spotColor }) => {
     const ref = useRef();
-    
     const texture = useMemo(() => {
         const canvas = document.createElement('canvas');
         canvas.width = 512; canvas.height = 256;
@@ -92,9 +87,7 @@ const DetailedMoon = ({ position, size, baseColor, spotColor }) => {
         }
         return new THREE.CanvasTexture(canvas);
     }, [baseColor, spotColor]);
-
     useFrame(() => { if (ref.current) ref.current.rotation.y -= 0.002; });
-
     return (
         <mesh ref={ref} position={position}>
             <sphereGeometry args={[size, 32, 32]} />
@@ -103,7 +96,7 @@ const DetailedMoon = ({ position, size, baseColor, spotColor }) => {
     );
 };
 
-// --- ASTEROID COMPONENT ---
+// --- ASTEROID COMPONENT (UPDATED) ---
 const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOver, onPointerOut }) => {
     const pivotRef = useRef();
     const meshRef = useRef();
@@ -116,16 +109,14 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     useCursor(hovered && !isLocked);
 
     const { position, rotation, speed } = useMemo(() => {
-        // MOBILE FIX: Tighten angle spread on mobile
         const angle = index * (isMobile ? 1.1 : 0.9); 
         
-        // MOBILE FIX: Reduce radius on mobile (3.5), keep Desktop large (6)
-        const baseRadius = isMobile ? 3.5 : 6;
-        const radiusIncrement = isMobile ? 0.4 : 0.8;
+        // FIX: Optimized radius for Z=28 camera
+        const baseRadius = isMobile ? 3.8 : 6;
+        const radiusIncrement = isMobile ? 0.45 : 0.8;
         
         const radius = baseRadius + index * radiusIncrement;
         return {
-            // MOBILE FIX: Increase vertical spread on mobile to use screen height
             position: [
                 radius * Math.cos(angle), 
                 (Math.random() - 0.5) * (isMobile ? 4 : 2), 
@@ -155,12 +146,15 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     if (isLocked) currentColor = 0x475569; 
     if (isCompleted) currentColor = 0x34D399; 
 
-    const asteroidSize = isMobile ? 0.55 : 0.6;
-    const hitboxSize = isMobile ? asteroidSize * 2.0 : asteroidSize * 1.5; 
+    // FIX: Larger Visual Size
+    const asteroidSize = isMobile ? 0.75 : 0.6;
+    // FIX: Massive Click Hitbox
+    const hitboxSize = isMobile ? asteroidSize * 3.0 : asteroidSize * 1.5; 
 
     return (
         <group ref={pivotRef}>
             <group position={position} rotation={rotation}>
+                {/* Invisible Hitbox Sphere */}
                 <Sphere
                     args={[hitboxSize, 16, 16]}
                     onClick={(e) => { if (!isLocked) { e.stopPropagation(); onClick(index); } }}
@@ -180,14 +174,16 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
                         transparent={isLocked}
                         opacity={isLocked ? 0.4 : 1.0}
                     />
+                    
+                    {/* FIX: Pointer Events None for Icons */}
                     {isLocked && (
-                    <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                        <div><FaLock className={`text-slate-400 opacity-70 ${isMobile ? 'text-xl' : 'text-2xl'}`} /></div>
+                    <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                        <div className="pointer-events-none"><FaLock className={`text-slate-400 opacity-70 ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                     </Html>
                     )}
                     {isCompleted && (
-                    <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                        <div><FaCheck className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} /></div>
+                    <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                        <div className="pointer-events-none"><FaCheck className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                     </Html>
                     )}
                 </mesh>
@@ -203,12 +199,9 @@ function PictureAssociation() {
   const [isHovering, setIsHovering] = useState(false);
   const { currentUser, userProgress, totalXP, loading: authLoading } = useAuth();
 
-  // CRITICAL FIX: Default to FALSE so Laptop starts with correct 'Big' view
   const [isMobile, setIsMobile] = useState(false);
-  
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    // Determine initial state client-side
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -253,14 +246,11 @@ function PictureAssociation() {
      );
    }
 
-  // CAMERA LOGIC
-  // If isMobile is TRUE: Zoom way out (Z=32) so phone users see everything
-  // If isMobile is FALSE (Laptop): Keep normal zoom (Z=15) so it looks big and nice
+  // FIX: Camera Z set to 28 for mobile (closer zoom)
   const cameraSettings = isMobile
-    ? { position: [0, 0, 32], fov: 65 }
+    ? { position: [0, 0, 28], fov: 65 }
     : { position: [0, 0, 15], fov: 75 };
 
-  // Shrink the central planet only on mobile
   const planetScale = isMobile ? 0.6 : 1;
 
   return (
@@ -277,8 +267,6 @@ function PictureAssociation() {
         <Stars radius={200} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
         <Sparkles count={150} scale={25} size={2} speed={0.4} opacity={0.4} color="#2dd4bf" />
 
-        {/* --- DECORATIVE BACKGROUND PLANETS --- */}
-        {/* Adjusted positions for mobile to avoid overlap */}
         <RingPlanet 
             position={isMobile ? [-12, 12, -30] : [-18, 6, -25]} 
             size={3.5} 
@@ -300,7 +288,6 @@ function PictureAssociation() {
             spotColor="#14b8a6" 
         />
 
-        {/* Pass Scale to Planet */}
         <Planet scale={planetScale} />
         <Atmosphere scale={planetScale} />
 
@@ -318,24 +305,20 @@ function PictureAssociation() {
         ))}
       </Canvas>
 
-      {/* --- HEADER FIX --- */}
       <div className="absolute inset-0 flex flex-col p-3 sm:p-4 md:p-8 ui-overlay pointer-events-none">
         <header className="w-full max-w-7xl mx-auto flex justify-between items-center pointer-events-auto px-1 sm:px-0">
            
            <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
             <img src={logoImg} alt="NeuroSwitch Logo" className="w-8 h-8 sm:w-11 sm:h-11" />
-            {/* FIX: Hide text on mobile to create space */}
             <span className="hidden md:block text-lg sm:text-2xl font-bold text-white">NeuroSwitch</span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
-             {/* FIX: Smaller badge text/padding on mobile */}
              <div className="bg-cyan-900/50 border border-cyan-500/30 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">
                 <span className="text-[10px] sm:text-sm font-bold text-cyan-300 uppercase tracking-wider">Phase 2</span>
              </div>
 
             <div className="text-right">
-              {/* FIX: Truncate long names on mobile */}
               <p className="font-semibold text-xs sm:text-sm max-w-[80px] sm:max-w-none truncate">
                 {currentUser?.name || 'Player'}
               </p>

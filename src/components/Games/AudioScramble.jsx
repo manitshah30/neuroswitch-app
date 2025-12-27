@@ -10,17 +10,14 @@ import logoImg from '../../assets/Logo.png';
 import { useAuth } from '../../context/AuthContext';
 
 // --- MAIN PLANET (Phase 3: Crimson/Red Giant Theme) ---
-// Added 'scale' prop for mobile resizing
 const Planet = React.memo(({ scale = 1 }) => {
   const planetRef = useRef();
   const texture = useMemo(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 1024; canvas.height = 512;
     const context = canvas.getContext('2d');
-    // Deep Red Base
     context.fillStyle = '#4c0519'; // rose-950
     context.fillRect(0, 0, 1024, 512);
-    // Fiery Orange/Gold Spots
     for (let i = 0; i < 25; i++) {
       context.fillStyle = `rgba(251, 146, 60, ${Math.random() * 0.2 + 0.1})`; // orange-400
       context.beginPath();
@@ -40,7 +37,6 @@ const Planet = React.memo(({ scale = 1 }) => {
 });
 
 // --- ATMOSPHERE GLOW (Warm Red) ---
-// Added 'scale' prop
 const Atmosphere = React.memo(({ scale = 1 }) => (
   <Sphere args={[4.2, 64, 64]} scale={[scale, scale, scale]}>
     <shaderMaterial
@@ -56,7 +52,7 @@ const Atmosphere = React.memo(({ scale = 1 }) => (
 const GoldenStar = ({ position, size }) => {
     const ref = useRef();
     useFrame((state) => {
-        if (ref.current) ref.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.05); // Pulsing effect
+        if (ref.current) ref.current.scale.setScalar(1 + Math.sin(state.clock.elapsedTime * 2) * 0.05);
     });
 
     return (
@@ -65,7 +61,6 @@ const GoldenStar = ({ position, size }) => {
                 <sphereGeometry args={[size, 32, 32]} />
                 <meshBasicMaterial color="#fbbf24" /> 
             </mesh>
-            {/* Star Glow */}
             <mesh scale={[1.2, 1.2, 1.2]}>
                 <sphereGeometry args={[size, 32, 32]} />
                 <meshBasicMaterial color="#f59e0b" transparent opacity={0.3} />
@@ -92,7 +87,7 @@ const DistantPlanet = ({ position, size, color }) => (
     </mesh>
 );
 
-// --- ASTEROID COMPONENT ---
+// --- ASTEROID COMPONENT (UPDATED) ---
 const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOver, onPointerOut }) => {
     const pivotRef = useRef();
     const meshRef = useRef();
@@ -107,16 +102,14 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     useCursor(hovered && !isLocked);
 
     const { position, rotation, speed } = useMemo(() => {
-        // MOBILE ADJUSTMENT: Tighten orbits spread on mobile
         const angle = index * (isMobile ? 1.1 : 0.9); 
         
-        // MOBILE ADJUSTMENT: Reduced radius (3.5) for mobile, kept (6) for desktop
-        const baseRadius = isMobile ? 3.5 : 6;
-        const radiusIncrement = isMobile ? 0.4 : 0.8;
+        // FIX: Adjusted mobile radius for Z=28 camera
+        const baseRadius = isMobile ? 3.8 : 6;
+        const radiusIncrement = isMobile ? 0.45 : 0.8;
         
         const radius = baseRadius + index * radiusIncrement;
         return {
-            // MOBILE ADJUSTMENT: Increase vertical spread to use phone height
             position: [
                 radius * Math.cos(angle), 
                 (Math.random() - 0.5) * (isMobile ? 4 : 2), 
@@ -140,19 +133,21 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
         }
      });
 
-    // Warm Color Palette for Levels
     const colorMap = { 'Exposure': 0xfbbf24, 'Easy': 0xf43f5e, 'Medium': 0xe11d48, 'Hard': 0xbe123c }; 
     let currentColor = colorMap[lesson.difficulty] || 0xf43f5e;
     
-    if (isLocked) currentColor = 0x52525b; // Zinc-600
-    if (isCompleted) currentColor = 0x22c55e; // Green check
+    if (isLocked) currentColor = 0x52525b; 
+    if (isCompleted) currentColor = 0x22c55e; 
 
-    const asteroidSize = isMobile ? 0.55 : 0.6;
-    const hitboxSize = isMobile ? asteroidSize * 2.0 : asteroidSize * 1.5; 
+    // FIX: Larger Visual Size
+    const asteroidSize = isMobile ? 0.75 : 0.6;
+    // FIX: Massive Click Hitbox
+    const hitboxSize = isMobile ? asteroidSize * 3.0 : asteroidSize * 1.5; 
 
     return (
         <group ref={pivotRef}>
             <group position={position} rotation={rotation}>
+                {/* Invisible Hitbox Sphere */}
                 <Sphere
                     args={[hitboxSize, 16, 16]}
                     onClick={(e) => { if (!isLocked) { e.stopPropagation(); onClick(index); } }}
@@ -166,20 +161,22 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
                     <icosahedronGeometry args={[asteroidSize, 1]} />
                     <meshPhongMaterial
                         color={currentColor}
-                        emissive={!isLocked ? 0xfecdd3 : 0x000000} // Rose glow
+                        emissive={!isLocked ? 0xfecdd3 : 0x000000} 
                         emissiveIntensity={0}
                         flatShading={true}
                         transparent={isLocked}
                         opacity={isLocked ? 0.4 : 1.0}
                     />
+                    
+                    {/* FIX: Pointer Events None for Icons */}
                     {isLocked && (
-                    <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                        <div><FaLock className={`text-slate-400 opacity-70 ${isMobile ? 'text-xl' : 'text-2xl'}`} /></div>
+                    <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                        <div className="pointer-events-none"><FaLock className={`text-slate-400 opacity-70 ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                     </Html>
                     )}
                     {isCompleted && (
-                    <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                        <div><FaCheck className={`text-white ${isMobile ? 'text-xl' : 'text-2xl'}`} /></div>
+                    <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                        <div className="pointer-events-none"><FaCheck className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                     </Html>
                     )}
                 </mesh>
@@ -195,18 +192,15 @@ function AudioScramble() {
   const [isHovering, setIsHovering] = useState(false);
   const { currentUser, userProgress, totalXP, loading: authLoading } = useAuth();
 
-  // FIX: Initialize as FALSE so Laptop defaults to the correct desktop view
   const [isMobile, setIsMobile] = useState(false);
   
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    // Initial check
     handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // PHASE 3 LESSONS (15-21)
   const lessons = useMemo(() => [
     { id: '15', name: 'Sound Soak: First Contact', description: 'Listen and learn 10 new words.', difficulty: 'Exposure' },
     { id: '16', name: 'Ear Match: Round One', description: 'Test your ear on the first 5 words.', difficulty: 'Easy' },
@@ -221,9 +215,7 @@ function AudioScramble() {
 
   const handleStartLesson = () => {
     if (selectedLesson) {
-      // Phase 1 (0-6), Phase 2 (7-13), Phase 3 starts at 14.
       const globalLessonIndex = 14 + selectedLessonIndex; 
-      
       navigate(`/lesson/${selectedLesson.id}`, {
         state: { lessonIndex: globalLessonIndex } 
       });
@@ -248,16 +240,14 @@ function AudioScramble() {
      );
    }
 
-  // CAMERA LOGIC: Zoom out on mobile (Z=32), Standard on Desktop (Z=15)
+  // FIX: Camera Z set to 28 for mobile (closer zoom)
   const cameraSettings = isMobile
-    ? { position: [0, 0, 32], fov: 65 }
+    ? { position: [0, 0, 28], fov: 65 }
     : { position: [0, 0, 15], fov: 75 };
 
-  // Shrink Planet only on Mobile
   const planetScale = isMobile ? 0.6 : 1;
 
   return (
-    // --- BACKGROUND: Warm Radial Gradient (Red/Rose to Black) ---
     <div className="relative w-full h-screen overflow-hidden bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#4c0519] via-[#1e1b4b] to-black text-white">
       
       <Canvas
@@ -266,24 +256,19 @@ function AudioScramble() {
         onPointerMissed={() => setSelectedLessonIndex(null)}
       >
         <ambientLight intensity={0.6} />
-        <directionalLight position={[5, 5, 5]} intensity={1.5} color="#fbbf24" /> {/* Golden Sunlight */}
+        <directionalLight position={[5, 5, 5]} intensity={1.5} color="#fbbf24" /> 
         
         <Stars radius={200} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
         <Sparkles count={150} scale={25} size={3} speed={0.4} opacity={0.5} color="#fbbf24" />
 
-        {/* --- BACKGROUND DECOR --- */}
-        {/* Pulsing Golden Star (Top Left) - Adjusted for Mobile */}
         <GoldenStar position={isMobile ? [-10, 15, -30] : [-15, 8, -25]} size={2} />
         
-        {/* Mysterious Dark Moon (Bottom Right) - Adjusted for Mobile */}
         <DarkMoon position={isMobile ? [10, -15, -25] : [12, -6, -15]} size={3} />
 
-        {/* Floating Rocks/Debris using Float */}
         <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
             <DistantPlanet position={[18, 5, -30]} size={0.5} color="#881337" />
         </Float>
 
-        {/* Pass Scale to Planet Components */}
         <Planet scale={planetScale} />
         <Atmosphere scale={planetScale} />
 
@@ -301,24 +286,20 @@ function AudioScramble() {
         ))}
       </Canvas>
 
-      {/* --- HEADER FIX --- */}
       <div className="absolute inset-0 flex flex-col p-3 sm:p-4 md:p-8 ui-overlay pointer-events-none">
         <header className="w-full max-w-7xl mx-auto flex justify-between items-center pointer-events-auto px-1 sm:px-0">
            
            <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
             <img src={logoImg} alt="NeuroSwitch Logo" className="w-8 h-8 sm:w-11 sm:h-11" />
-            {/* FIX: Hidden on mobile to prevent overlap */}
             <span className="hidden md:block text-lg sm:text-2xl font-bold text-white">NeuroSwitch</span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
-             {/* Phase 3 Badge - Smaller on Mobile */}
              <div className="bg-rose-900/50 border border-rose-500/30 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">
                 <span className="text-[10px] sm:text-sm font-bold text-rose-300 uppercase tracking-wider">Phase 3</span>
              </div>
 
             <div className="text-right">
-              {/* FIX: Truncate name on Mobile */}
               <p className="font-semibold text-xs sm:text-sm max-w-[80px] sm:max-w-none truncate">
                 {currentUser?.name || 'Player'}
               </p>
