@@ -2,14 +2,14 @@
 
 import React, { useRef, useState, useMemo, useEffect } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Sphere, Stars, useCursor, Html, Sparkles } from '@react-three/drei';
+import { Sphere, Stars, useCursor, Html, Sparkles, Ring } from '@react-three/drei';
 import * as THREE from 'three';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaLock, FaCheck } from 'react-icons/fa';
 import logoImg from '../../assets/Logo.png';
 import { useAuth } from '../../context/AuthContext';
 
-// --- MAIN PLANET ---
+// --- MAIN PLANET (Phase 1) ---
 const Planet = React.memo(({ scale = 1 }) => {
   const planetRef = useRef();
   const texture = useMemo(() => {
@@ -52,12 +52,10 @@ const Atmosphere = React.memo(({ scale = 1 }) => (
 const RingPlanet = ({ position, size, color, ringColor }) => {
     const planetRef = useRef();
     const ringRef = useRef();
-
     useFrame(() => {
         if (planetRef.current) planetRef.current.rotation.y += 0.001;
         if (ringRef.current) ringRef.current.rotation.z -= 0.0005;
     });
-
     return (
         <group position={position}>
             <mesh ref={planetRef}>
@@ -89,9 +87,7 @@ const DetailedMoon = ({ position, size, baseColor, spotColor }) => {
         }
         return new THREE.CanvasTexture(canvas);
     }, [baseColor, spotColor]);
-
     useFrame(() => { if (ref.current) ref.current.rotation.y -= 0.002; });
-
     return (
         <mesh ref={ref} position={position}>
             <sphereGeometry args={[size, 32, 32]} />
@@ -100,7 +96,7 @@ const DetailedMoon = ({ position, size, baseColor, spotColor }) => {
     );
 };
 
-// --- ASTEROID COMPONENT ---
+// --- ASTEROID COMPONENT (UPDATED) ---
 const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOver, onPointerOut }) => {
     const pivotRef = useRef();
     const meshRef = useRef();
@@ -110,12 +106,11 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     useCursor(hovered && !isLocked);
 
     const { position, rotation, speed } = useMemo(() => {
-        // Only tighten orbit on mobile
         const angle = index * (isMobile ? 1.1 : 0.9);
         
-        // Restore original radius for Desktop (6), shrink only for mobile (3.5)
-        const baseRadius = isMobile ? 3.5 : 6; 
-        const radiusIncrement = isMobile ? 0.4 : 0.8; 
+        // FIX: Adjusted mobile radius and spacing to fit the bigger asteroids
+        const baseRadius = isMobile ? 3.8 : 6; 
+        const radiusIncrement = isMobile ? 0.45 : 0.8; 
         const radius = baseRadius + index * radiusIncrement;
 
         return {
@@ -147,13 +142,18 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
     if (isLocked) currentColor = 0x666666;
     if (isCompleted) currentColor = 0x00ff00;
 
-    const asteroidSize = isMobile ? 0.6 : 0.6; 
+    // FIX: Made visual size bigger on mobile (0.75) for better visibility
+    const asteroidSize = isMobile ? 0.75 : 0.6; 
+    
+    // FIX: Massive hitbox (3x) on mobile so thumb clicks register easily
+    const hitboxSize = isMobile ? asteroidSize * 3.0 : asteroidSize * 1.5;
 
     return (
         <group ref={pivotRef}>
         <group position={position} rotation={rotation}>
+            {/* Invisible Hitbox Sphere */}
             <Sphere
-                args={[asteroidSize * 2.5, 16, 16]} 
+                args={[hitboxSize, 16, 16]} 
                 onClick={(e) => { if (!isLocked) { e.stopPropagation(); onClick(index); } }}
                 onPointerOver={(e) => { if (!isLocked) { e.stopPropagation(); setHovered(true); onPointerOver(); } }}
                 onPointerOut={(e) => { if (!isLocked) { e.stopPropagation(); setHovered(false); onPointerOut(); } }}
@@ -171,14 +171,17 @@ const Asteroid = ({ lesson, index, userProgress, isMobile, onClick, onPointerOve
                     transparent={isLocked}
                     opacity={isLocked ? 0.4 : 1.0}
                 />
+                
+                {/* FIX: Added 'pointer-events-none' class to the div inside HTML 
+                    This ensures clicks pass through the icon and hit the asteroid behind it */}
                 {isLocked && (
-                <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                    <div><FaLock className={`text-white opacity-70 ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
+                <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                    <div className="pointer-events-none"><FaLock className={`text-white opacity-70 ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                 </Html>
                 )}
                 {isCompleted && (
-                <Html center pointerEvents="none" distanceFactor={isMobile ? 15 : 10}>
-                    <div><FaCheck className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
+                <Html center distanceFactor={isMobile ? 15 : 10} style={{ pointerEvents: 'none' }}>
+                    <div className="pointer-events-none"><FaCheck className={`text-white ${isMobile ? 'text-lg' : 'text-2xl'}`} /></div>
                 </Html>
                 )}
             </mesh>
@@ -194,16 +197,11 @@ function VocabularyGamePage() {
   const [isHovering, setIsHovering] = useState(false);
   const { currentUser, userProgress, totalXP, loading: authLoading } = useAuth();
 
-  // FIX: Initialize as FALSE (Desktop) to ensure laptop always looks correct initially
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
-    // Check purely on client side
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    
-    // Call once to set initial state correctly based on current window
     handleResize();
-    
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
@@ -251,11 +249,10 @@ function VocabularyGamePage() {
      );
    }
 
-  // CAMERA SETTINGS
-  // Desktop (False): [0, 0, 15] -> EXACTLY your original perfect laptop settings
-  // Mobile (True): [0, 0, 32] -> Zoomed out only for phone
+  // FIX: Changed mobile Z position from 32 to 28 (Zoomed In)
+  // This makes everything appear larger on the phone screen.
   const cameraSettings = isMobile
-    ? { position: [0, 0, 32], fov: 65 } 
+    ? { position: [0, 0, 28], fov: 65 } 
     : { position: [0, 0, 15], fov: 75 }; 
 
   const planetScale = isMobile ? 0.6 : 1;
@@ -315,23 +312,19 @@ function VocabularyGamePage() {
       {/* --- HEADER --- */}
       <div className="absolute inset-0 flex flex-col p-3 sm:p-4 md:p-8 ui-overlay pointer-events-none">
         
-        {/* Added px-1 for safe spacing on mobile edges */}
         <header className="w-full max-w-7xl mx-auto flex justify-between items-center pointer-events-auto px-1 sm:px-0">
            
            <Link to="/dashboard" className="flex items-center gap-2 sm:gap-3">
             <img src={logoImg} alt="NeuroSwitch Logo" className="w-8 h-8 sm:w-11 sm:h-11" />
-            {/* FIX: 'hidden md:block' -> Hides text entirely on mobile to prevent overlap */}
             <span className="hidden md:block text-lg sm:text-2xl font-bold text-white">NeuroSwitch</span>
           </Link>
 
           <div className="flex items-center gap-2 sm:gap-4">
-             {/* Phase 1 Badge - Adjusted sizing */}
              <div className="bg-purple-900/50 border border-purple-500/30 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full whitespace-nowrap">
                 <span className="text-[10px] sm:text-sm font-bold text-purple-300 uppercase tracking-wider">Phase 1</span>
              </div>
 
             <div className="text-right">
-              {/* Truncate name on mobile to prevent layout breaking */}
               <p className="font-semibold text-xs sm:text-sm max-w-[80px] sm:max-w-none truncate">
                 {currentUser?.name || currentUser?.email || 'Player'}
               </p>
@@ -340,7 +333,6 @@ function VocabularyGamePage() {
               </p>
             </div>
              
-             {/* User Avatar */}
              <img 
               src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || currentUser?.email || 'U')}&background=7c3aed&color=fff`} 
               className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-purple-400 flex-shrink-0" 
