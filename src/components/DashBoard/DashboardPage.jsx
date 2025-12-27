@@ -12,6 +12,8 @@ import CognitiveCoreCard from './CogCoreCard';
 import LearningUniverse from './LearningUniverse'; 
 import AchievementsCard from './AchievementsCard';
 
+import ClientExport from '../ClientExport';
+
 // Get IDs from environment variables
 const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
 const LESSONS_COLLECTION_ID = import.meta.env.VITE_APPWRITE_LESSONS_TABLE_ID;
@@ -213,6 +215,11 @@ function DashboardPage() {
 
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-white mb-8">Your Performance Data</h2>
+
+<div className="mb-6">
+               <ClientExport />
+            </div>
+
             <div className="w-full max-w-4xl mx-auto h-[500px]">
               <CognitiveCoreCard averageScores={averageScores} />
             </div>
