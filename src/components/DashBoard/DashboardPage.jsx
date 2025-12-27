@@ -216,9 +216,11 @@ function DashboardPage() {
           <div className="text-center mb-8">
             <h2 className="text-4xl font-bold text-white mb-8">Your Performance Data</h2>
 
-<div className="mb-6">
-               <ClientExport />
-            </div>
+{import.meta.env.VITE_ADMIN_EMAILS?.split(',').includes(currentUser?.email) && (
+                <div className="mb-6">
+                   <ClientExport />
+                </div>
+            )}
 
             <div className="w-full max-w-4xl mx-auto h-[500px]">
               <CognitiveCoreCard averageScores={averageScores} />
