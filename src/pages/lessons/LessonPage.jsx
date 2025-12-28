@@ -193,9 +193,9 @@ function LessonPage() {
       if (id >= 22) {
           navigate("/games/story");
       } else if (id >= 15) {
-          navigate("/games/audio");
+          navigate("/games/scramble");
       } else if (id >= 8) {
-          navigate("/games/picture-association");
+          navigate("/games/association");
       } else {
           navigate("/games/vocabulary");
       }
